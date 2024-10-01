@@ -31,16 +31,18 @@ router.post('/', async (req: Request, res: Response) => {
 // Update a carrier
 router.put('/:carrier_number', async (req: Request, res: Response) => {
   const { carrier_number } = req.params;
-  const updatedCarrier: Carrier = req.body;
-
+  const updatedCarrier: Carrier = req.body;  // This should be the parsed data from the frontend
+  console.log('updatedCarrier',updatedCarrier)
   try {
+    // Ensure that updatedCarrier is directly mapped to the query
     await db.query('UPDATE carrier_list SET ? WHERE carrier_number = ?', [updatedCarrier, carrier_number]);
     res.status(200).json(updatedCarrier);
   } catch (error) {
     console.error('Database update error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: error });
   }
 });
+
 
 // Delete a carrier
 router.delete('/:carrier_number', async (req: Request, res: Response) => {
