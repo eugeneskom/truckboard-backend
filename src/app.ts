@@ -2,6 +2,8 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import carrierListRoutes from './routes/carrierList'
 import truckListRouter from './routes/truckList';
+import driverListRouter from './routes/driverList';
+import searchListRouter from './routes/searchList';
 const app: Application = express();
 app.use(express.json());
 app.use(cors({
@@ -18,6 +20,9 @@ app.use('/api/truck-list', truckListRouter);
 
 // Use the carrier list routes
 app.use('/api/carrier-list', carrierListRoutes);
+
+app.use('/api/driver-list', driverListRouter);
+app.use('/api/search-list', searchListRouter);
 
 
 export default app;
