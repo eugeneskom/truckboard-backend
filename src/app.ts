@@ -4,7 +4,10 @@ import carrierListRoutes from './routes/carrierList'
 import truckListRouter from './routes/truckList';
 import driverListRouter from './routes/driverList';
 import searchListRouter from './routes/searchList';
+import rateListRouter from './routes/rateList'
+
 const app: Application = express();
+
 app.use(express.json());
 app.use(cors({
   origin: 'http://localhost:3000', // Allow only this origin
@@ -22,7 +25,10 @@ app.use('/api/truck-list', truckListRouter);
 app.use('/api/carrier-list', carrierListRoutes);
 
 app.use('/api/driver-list', driverListRouter);
+
 app.use('/api/search-list', searchListRouter);
+
+app.use('/api/rate-list', rateListRouter);
 
 
 export default app;
