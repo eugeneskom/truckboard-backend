@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all drivers
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const [rows] = await db.query('SELECT * FROM driver_list');
+    const [rows] = await db.query('SELECT * FROM drivers');
     res.json(rows);
   } catch (error) {
     console.error('Database query error:', error);
@@ -21,7 +21,10 @@ router.post('/', async (req: Request, res: Response) => {
   const newDriver: Driver = req.body;
   try {
     const [result] = await db.query('INSERT INTO driver_list SET ?', newDriver);
-    const insertedId = (result as any).insertId;
+    interface InsertResult {
+      insertId: number;
+    }
+    const insertedId = (result as InsertResult).insertId;
     res.status(201).json({ ...newDriver, id: insertedId });
   } catch (error) {
     console.error('Database insert error:', error);
@@ -40,6 +43,18 @@ router.put('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Database update error:', error);
     res.status(500).json({ error: error });
+  }
+});
+
+router.put('/assign/:id', async (req: Request, res: Response) => {
+  try {
+    const driverId = req.params.id;
+    const { truck_id } = req.body;
+    await db.query('UPDATE drivers SET truck_id = ? WHERE id = ?', [truck_id, driverId]);
+    res.json({ message: 'Driver assigned successfully' });
+  } catch (error) {
+    console.error('Error assigning driver:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

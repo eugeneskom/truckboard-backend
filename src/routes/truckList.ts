@@ -8,7 +8,19 @@ const router = express.Router();
 // Get all trucks
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const [rows] = await db.query('SELECT * FROM truck_list');
+    const [rows] = await db.query('SELECT * FROM trucks');
+    res.json(rows);
+  } catch (error) {
+    console.error('Database query error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// get trucks by carrier id
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const carrierId = req.params.id;
+    const [rows] = await db.query('SELECT * FROM trucks WHERE carrier_id = ?', [carrierId]);
     res.json(rows);
   } catch (error) {
     console.error('Database query error:', error);
