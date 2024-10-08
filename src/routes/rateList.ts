@@ -1,4 +1,3 @@
-// src/routes/rateList.ts
 import express, { Request, Response } from 'express';
 import db from '../db';
 import { RateItem } from '../models/rateItem';
@@ -9,7 +8,6 @@ const router = express.Router();
 router.get('/', async (req: Request, res: Response) => {
   try {
     const [rows] = await db.query('SELECT * FROM rate_list');
-    console.log('rows',rows)
     res.json(rows);
   } catch (error) {
     console.error('Database query error:', error);
@@ -22,6 +20,7 @@ router.post('/', async (req: Request, res: Response) => {
   const newRate: RateItem = req.body;
   try {
     const [result] = await db.query('INSERT INTO rate_list SET ?', newRate);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertedId = (result as any).insertId;
     res.status(201).json({ ...newRate, id: insertedId });
   } catch (error) {
