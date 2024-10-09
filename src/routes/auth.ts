@@ -6,7 +6,7 @@ import { RowDataPacket } from 'mysql2';
 const router = express.Router();
 
 // User registration
-router.post('/api/register', async (req:any, res:any) => {
+router.post('/register', async (req:any, res:any) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,7 +24,7 @@ router.post('/api/register', async (req:any, res:any) => {
 
 // User login
 
-router.post('/api/login', async (req: any, res: any) => {
+router.post('/login', async (req: any, res: any) => {
   try {
     const { email, password } = req.body;
 
@@ -72,7 +72,7 @@ router.post('/api/login', async (req: any, res: any) => {
 
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get('/api/check-auth', (req: any, res: any) => {
+router.get('/check-auth', (req: any, res: any) => {
   const token = req.cookies.token;
 
   if (!token) {

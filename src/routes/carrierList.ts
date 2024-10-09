@@ -2,6 +2,7 @@
 import express, { Request, Response } from 'express';
 import db from '../db';
 import { Carrier } from '../models/carrier';
+import { RowDataPacket } from 'mysql2';
 
 const router = express.Router();
 
@@ -40,14 +41,26 @@ router.get('/:id/details', async (req: Request, res: Response) => {
 });
 
 // Create a new carrier
-router.post('/', async (req: Request, res: Response) => {
-  const newCarrier: Carrier = req.body; // Assuming the request body contains a Carrier object
+router.post('/', async (req: any, res: any) => {
+  const { agent_id, ...carrierData } = req.body;
+
   try {
-    await db.query('INSERT INTO carriers SET ?', newCarrier);
-    res.status(201).json(newCarrier);
-  } catch (error) {
+    // Check if the agent exists
+    const [agents] = await db.query<RowDataPacket[]>('SELECT id FROM users WHERE id = ?', [agent_id]);
+
+    if (agents.length === 0) {
+      return res.status(400).json({ error: 'Invalid agent_id. The specified agent does not exist.' });
+    }
+
+    // If the agent exists, proceed with carrier creation
+    const [result] = await db.query('INSERT INTO carriers SET ?', { ...carrierData, agent_id });
+    interface insertResult {
+      insertId: number;
+    }
+    res.status(201).json({ id: (result as insertResult).insertId, ...carrierData, agent_id });
+  } catch (error: any) {
     console.error('Database insert error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
 

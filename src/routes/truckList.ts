@@ -34,7 +34,8 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     // Convert accessories array to JSON string
     newTruck.accessories = JSON.stringify(newTruck.accessories);
-    const [result] = await db.query('INSERT INTO truck_list SET ?', newTruck);
+    const [result] = await db.query('INSERT INTO trucks SET ?', newTruck);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const insertedId = (result as any).insertId;
     res.status(201).json({ ...newTruck, id: insertedId });
   } catch (error) {
@@ -51,7 +52,7 @@ router.put('/:id', async (req: Request, res: Response) => {
   try {
     // Convert accessories array to JSON string
     updatedTruck.accessories = JSON.stringify(updatedTruck.accessories);
-    await db.query('UPDATE truck_list SET ? WHERE id = ?', [updatedTruck, id]);
+    await db.query('UPDATE trucks SET ? WHERE id = ?', [updatedTruck, id]);
     res.status(200).json(updatedTruck);
   } catch (error) {
     console.error('Database update error:', error);
@@ -64,7 +65,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    await db.query('DELETE FROM truck_list WHERE id = ?', [id]);
+    await db.query('DELETE FROM trucks WHERE id = ?', [id]);
     res.status(204).send(); // No content to send back
   } catch (error) {
     console.error('Database delete error:', error);
@@ -79,7 +80,7 @@ router.post('/:id/accessories', async (req: Request, res: Response) => {
 
   try {
     await db.query(
-      'UPDATE truck_list SET accessories = JSON_ARRAY_APPEND(accessories, "$", ?) WHERE id = ?',
+      'UPDATE trucks SET accessories = JSON_ARRAY_APPEND(accessories, "$", ?) WHERE id = ?',
       [accessory, id]
     );
     res.status(200).json({ message: 'Accessory added successfully' });
@@ -95,7 +96,7 @@ router.delete('/:id/accessories/:accessory', async (req: Request, res: Response)
 
   try {
     await db.query(
-      'UPDATE truck_list SET accessories = JSON_REMOVE(accessories, JSON_UNQUOTE(JSON_SEARCH(accessories, "one", ?))) WHERE id = ?',
+      'UPDATE trucks SET accessories = JSON_REMOVE(accessories, JSON_UNQUOTE(JSON_SEARCH(accessories, "one", ?))) WHERE id = ?',
       [accessory, id]
     );
     res.status(200).json({ message: 'Accessory removed successfully' });

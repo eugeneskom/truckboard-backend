@@ -11,6 +11,8 @@ import addRoutes from './routes/addEntities'
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import AuthRouter from './routes/auth'
+import AggregatedRoute from './routes/aggregatedData'
+import updateRoute from './routes/updateData'
 dotenv.config();
 
 
@@ -48,14 +50,19 @@ app.use('/api/carriers', carrierListRoutes);
 
 app.use('/api/drivers', driverListRouter);
 
-app.use('/api/search', searchListRouter);
+app.use('/api/searches', searchListRouter);
 
-app.use('/api/rate', rateListRouter);
+app.use('/api/rates', rateListRouter);
 
 // app.use('/api/postings', postingRouter);
 
 app.use('/api/add', addRoutes);
+
 app.use('/api/auth', AuthRouter);
+
+app.use('/api/aggregated', AggregatedRoute);
+
+app.use('/api/update-data', updateRoute);
 
 
 

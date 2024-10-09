@@ -39,10 +39,10 @@ const createPosting = async (req: Request, res: Response) => {
       // 2. Insert into searches table
       const [searchResult] = await conn.query<ResultSetHeader>(`
           INSERT INTO search_list 
-          (search_number, pu_city, destination, late_pick_up, pu_date_start, pu_date_end, del_date_start, del_date_end)
+          (search_id, pu_city, destination, late_pick_up, pu_date_start, pu_date_end, del_date_start, del_date_end)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-          req.body.search_number,
+          req.body.search_id,
           req.body.pu_city,
           req.body.destination,
           req.body.late_pick_up,
