@@ -5,6 +5,7 @@ import { Carrier } from '../models/carrier';
 import { RowDataPacket } from 'mysql2';
 import { Truck } from '../models/truck';
 import { Driver } from '../models/driver';
+import { SearchItem } from '../models/searchItem';
 
 const router = express.Router();
 
@@ -87,7 +88,6 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Delete a carrier
-
 router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const connection = await db.getConnection();
@@ -98,35 +98,47 @@ router.delete('/:id', async (req: Request, res: Response) => {
     // 1. Get all the trucks associated with this carrier
     const [trucks] = await connection.query('SELECT id FROM trucks WHERE carrier_id = ?', [id]);
     const truckIds = (trucks as Truck[]).map((truck: Truck) => truck.id);
-    
-    // const [drivers] = await connection.query('SELECT id FROM drivers WHERE carrier_id = ?', [id]);
-    // const driverIds = (drivers as Driver[]).map((driver: Driver) => driver.id);
 
     if (truckIds.length > 0) {
-      // 2. Delete rates associated with these trucks
-      await connection.query('DELETE FROM rates WHERE truck_id IN (?)', [truckIds]);
+      // 2. Get all searches associated with these trucks
+      const [searches] = await connection.query('SELECT id FROM searches WHERE truck_id IN (?)', [
+        truckIds,
+      ]);
+      const searchIds = (searches as SearchItem[]).map((search: SearchItem) => search.id);
 
-      // 3. Delete searches associated with these trucks
-      await connection.query('DELETE FROM searches WHERE truck_id IN (?)', [truckIds]);
+      if (searchIds.length > 0) {
+        // 3. Delete rates associated with these searches
+        await connection.query('DELETE FROM rates WHERE search_id IN (?)', [searchIds]);
+        console.log('Deleted rates associated with searches:', searchIds);
 
-      // 4. Delete drivers associated with these trucks
+        // 4. Delete the searches
+        await connection.query('DELETE FROM searches WHERE id IN (?)', [searchIds]);
+        console.log('Deleted searches associated with trucks:', truckIds);
+      }
+
+      // 5. Delete drivers associated with these trucks
       await connection.query('DELETE FROM drivers WHERE truck_id IN (?)', [truckIds]);
+      console.log('Deleted drivers associated with trucks:', truckIds);
     }
 
-    // 5. Delete any remaining drivers directly associated with the carrier
+    // 6. Delete any remaining drivers directly associated with the carrier
     await connection.query('DELETE FROM drivers WHERE carrier_id = ?', [id]);
+    console.log('Deleted drivers associated with carrier:', id);
 
-    // 6. Delete the trucks
+    // 7. Delete the trucks
     await connection.query('DELETE FROM trucks WHERE carrier_id = ?', [id]);
+    console.log('Deleted trucks associated with carrier:', id);
 
-    // 7. Finally, delete the carrier
+    // 8. Finally, delete the carrier
     const [result] = await connection.query('DELETE FROM carriers WHERE id = ?', [id]);
+    console.log('Deleted carrier:', id);
 
     await connection.commit();
-    interface deleteResult {
+
+    interface DeleteResult {
       affectedRows: number;
     }
-    if ((result as deleteResult).affectedRows === 0) {
+    if ((result as DeleteResult).affectedRows === 0) {
       res.status(404).json({ message: 'Carrier not found' });
     } else {
       res.json({ message: 'Carrier and associated records deleted successfully' });
@@ -139,5 +151,4 @@ router.delete('/:id', async (req: Request, res: Response) => {
     connection.release();
   }
 });
-
 export default router;
