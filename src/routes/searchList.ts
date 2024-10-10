@@ -2,7 +2,6 @@
 import express, { Request, Response } from 'express';
 import db from '../db';
 import { SearchItem } from '../models/searchItem';
-import { RateItem } from '../models/rateItem';
 import { OkPacket, RowDataPacket } from 'mysql2';
 
 const router = express.Router();

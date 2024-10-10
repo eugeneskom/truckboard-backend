@@ -4,7 +4,6 @@ import db from '../db';
 import { Carrier } from '../models/carrier';
 import { RowDataPacket } from 'mysql2';
 import { Truck } from '../models/truck';
-import { Driver } from '../models/driver';
 import { SearchItem } from '../models/searchItem';
 
 const router = express.Router();
@@ -46,26 +45,27 @@ router.get('/:id/details', async (req: Request, res: Response) => {
 // Create a new carrier
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 router.post('/', async (req: any, res: any) => {
-  const { agent_id, ...carrierData } = req.body;
+  const { user_id, ...carrierData } = req.body;
 
   try {
     // Check if the agent exists
     const [agents] = await db.query<RowDataPacket[]>('SELECT id FROM users WHERE id = ?', [
-      agent_id,
+      user_id,
     ]);
 
     if (agents.length === 0) {
       return res
         .status(400)
-        .json({ error: 'Invalid agent_id. The specified agent does not exist.' });
+        .json({ error: 'Invalid user_id. The specified agent does not exist.' });
     }
 
     // If the agent exists, proceed with carrier creation
-    const [result] = await db.query('INSERT INTO carriers SET ?', { ...carrierData, agent_id });
+    const [result] = await db.query('INSERT INTO carriers SET ?', { ...carrierData, user_id });
     interface insertResult {
       insertId: number;
     }
-    res.status(201).json({ id: (result as insertResult).insertId, ...carrierData, agent_id });
+    res.status(201).json({ id: (result as insertResult).insertId, ...carrierData, user_id });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Database insert error:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
@@ -143,6 +143,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     } else {
       res.json({ message: 'Carrier and associated records deleted successfully' });
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     await connection.rollback();
     console.error('Database delete error:', error);

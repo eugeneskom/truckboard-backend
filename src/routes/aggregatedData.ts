@@ -60,7 +60,7 @@ router.get('/', async (req: Request, res: Response) => {
       LEFT JOIN trucks t ON s.truck_id = t.id
       LEFT JOIN drivers d ON s.driver_id = d.id
       LEFT JOIN carriers c ON s.carrier_id = c.id
-      LEFT JOIN users u ON c.agent_id = u.id
+      LEFT JOIN users u ON c.user_id = u.id
       ORDER BY 
           s.id
     `);
