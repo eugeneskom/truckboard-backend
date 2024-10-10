@@ -26,13 +26,15 @@ async function updateTable({ table, id, field, value }: UpdateParams): Promise<v
       params = [field, value, id];
       break;
     case 'trucks':
-      query = `
+        query = `
         UPDATE trucks t
         JOIN searches s ON s.truck_id = t.id
         SET t.?? = ?
         WHERE s.id = ?
       `;
-      params = [field, value, id];
+      // Map 'truck_type' to 'type' if it's the field being updated
+      const truckField = field === 'truck_type' ? 'type' : field;
+      params = [truckField, value, id];
       break;
     case 'drivers':
       query = `
