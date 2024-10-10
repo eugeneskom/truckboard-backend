@@ -9,4 +9,6 @@ export interface Carrier {
   company_phone: string;
   truck_type_spam: string;
   spam: string;
+  truck_count?: number;
+  driver_count?: number;
 }

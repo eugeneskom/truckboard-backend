@@ -3,6 +3,8 @@ import express, { Request, Response } from 'express';
 import db from '../db';
 import { Carrier } from '../models/carrier';
 import { RowDataPacket } from 'mysql2';
+import { Truck } from '../models/truck';
+import { Driver } from '../models/driver';
 
 const router = express.Router();
 
@@ -41,15 +43,20 @@ router.get('/:id/details', async (req: Request, res: Response) => {
 });
 
 // Create a new carrier
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 router.post('/', async (req: any, res: any) => {
   const { agent_id, ...carrierData } = req.body;
 
   try {
     // Check if the agent exists
-    const [agents] = await db.query<RowDataPacket[]>('SELECT id FROM users WHERE id = ?', [agent_id]);
+    const [agents] = await db.query<RowDataPacket[]>('SELECT id FROM users WHERE id = ?', [
+      agent_id,
+    ]);
 
     if (agents.length === 0) {
-      return res.status(400).json({ error: 'Invalid agent_id. The specified agent does not exist.' });
+      return res
+        .status(400)
+        .json({ error: 'Invalid agent_id. The specified agent does not exist.' });
     }
 
     // If the agent exists, proceed with carrier creation
@@ -67,29 +74,69 @@ router.post('/', async (req: any, res: any) => {
 // Update a carrier
 router.put('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const updatedCarrier: Carrier = req.body;  // This should be the parsed data from the frontend
-  console.log('updatedCarrier',updatedCarrier)
+  const updatedCarrier: Carrier = req.body; // This should be the parsed data from the frontend
+  console.log('updatedCarrier', updatedCarrier);
   try {
     // Ensure that updatedCarrier is directly mapped to the query
     await db.query('UPDATE carriers SET ? WHERE id = ?', [updatedCarrier, id]);
     res.status(200).json(updatedCarrier);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Database update error:', error);
     res.status(500).json({ error: error });
   }
 });
 
-
 // Delete a carrier
+
 router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const connection = await db.getConnection();
 
   try {
-    await db.query('DELETE FROM carriers WHERE id = ?', [id]);
-    res.status(204).send(); // No content to send back
-  } catch (error) {
+    await connection.beginTransaction();
+
+    // 1. Get all the trucks associated with this carrier
+    const [trucks] = await connection.query('SELECT id FROM trucks WHERE carrier_id = ?', [id]);
+    const truckIds = (trucks as Truck[]).map((truck: Truck) => truck.id);
+    
+    // const [drivers] = await connection.query('SELECT id FROM drivers WHERE carrier_id = ?', [id]);
+    // const driverIds = (drivers as Driver[]).map((driver: Driver) => driver.id);
+
+    if (truckIds.length > 0) {
+      // 2. Delete rates associated with these trucks
+      await connection.query('DELETE FROM rates WHERE truck_id IN (?)', [truckIds]);
+
+      // 3. Delete searches associated with these trucks
+      await connection.query('DELETE FROM searches WHERE truck_id IN (?)', [truckIds]);
+
+      // 4. Delete drivers associated with these trucks
+      await connection.query('DELETE FROM drivers WHERE truck_id IN (?)', [truckIds]);
+    }
+
+    // 5. Delete any remaining drivers directly associated with the carrier
+    await connection.query('DELETE FROM drivers WHERE carrier_id = ?', [id]);
+
+    // 6. Delete the trucks
+    await connection.query('DELETE FROM trucks WHERE carrier_id = ?', [id]);
+
+    // 7. Finally, delete the carrier
+    const [result] = await connection.query('DELETE FROM carriers WHERE id = ?', [id]);
+
+    await connection.commit();
+    interface deleteResult {
+      affectedRows: number;
+    }
+    if ((result as deleteResult).affectedRows === 0) {
+      res.status(404).json({ message: 'Carrier not found' });
+    } else {
+      res.json({ message: 'Carrier and associated records deleted successfully' });
+    }
+  } catch (error: any) {
+    await connection.rollback();
     console.error('Database delete error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  } finally {
+    connection.release();
   }
 });
 
