@@ -1,12 +1,13 @@
 import express from 'express';
 import db from '../db';
+// import { broadcastUpdate } from '../websocket';
 
 const router = express.Router();
 
 interface UpdateParams {
   table: string;
   id: number;
-  field: string |  Date;
+  field: string | Date;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
 }
@@ -26,7 +27,7 @@ async function updateTable({ table, id, field, value }: UpdateParams): Promise<v
       params = [field, value, id];
       break;
     case 'trucks':
-        query = `
+      query = `
         UPDATE trucks t
         JOIN searches s ON s.truck_id = t.id
         SET t.?? = ?
@@ -77,6 +78,10 @@ router.put('/', async (req: express.Request, res: express.Response) => {
 
   try {
     await updateTable({ table, id, field, value });
+
+    // Broadcast the update to all connected clients
+    // broadcastUpdate({ table, id, field, value });
+
     res.json({ message: 'Update successful' });
   } catch (error) {
     console.error('Error updating data:', error);

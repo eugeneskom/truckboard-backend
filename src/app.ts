@@ -12,18 +12,13 @@ import dotenv from 'dotenv';
 import AuthRouter from './routes/auth';
 import AggregatedRoute from './routes/aggregatedData';
 import updateRoute from './routes/updateData';
-import { Server as WebSocketServer } from 'ws';
-import http from 'http';
+
 
 dotenv.config();
 
 
 const app: Application = express();
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
 
-// Attach the WebSocket server to the app
-app.wss = wss;
 
 
 app.use(express.json());
