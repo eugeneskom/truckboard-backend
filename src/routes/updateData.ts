@@ -1,5 +1,8 @@
 import express from 'express';
 import db from '../db';
+// import { wss } from '../server';
+import { wss } from '../server';
+import WebSocket from 'ws';
 // import { broadcastUpdate } from '../websocket';
 
 const router = express.Router();
@@ -10,6 +13,19 @@ interface UpdateParams {
   field: string | Date;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function broadcastUpdate(data: any) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify({
+          type: 'update',
+          data,
+        }),
+      );
+    }
+  });
 }
 
 async function updateTable({ table, id, field, value }: UpdateParams): Promise<void> {
@@ -78,9 +94,8 @@ router.put('/', async (req: express.Request, res: express.Response) => {
 
   try {
     await updateTable({ table, id, field, value });
-
     // Broadcast the update to all connected clients
-    // broadcastUpdate({ table, id, field, value });
+    broadcastUpdate({ table, id, field, value });
 
     res.json({ message: 'Update successful' });
   } catch (error) {
