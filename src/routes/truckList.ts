@@ -2,6 +2,7 @@
 import express, { Request, Response } from 'express';
 import db from '../db';
 import { Truck } from '../models/truck';
+import { PoolConnection } from 'mysql2';
 
 const router = express.Router();
 
@@ -61,15 +62,43 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Delete a truck
+
 router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-
+  
+  const connection = await db.getConnection();
   try {
-    await db.query('DELETE FROM trucks WHERE id = ?', [id]);
+    
+    await connection.beginTransaction();
+
+    // Delete related rates
+    await connection.query('DELETE FROM rates WHERE search_id IN (SELECT id FROM searches WHERE truck_id = ?)', [id]);
+
+    // Delete related searches
+    await connection.query('DELETE FROM searches WHERE truck_id = ?', [id]);
+
+    // Update driver to remove association with the truck
+    await connection.query('UPDATE drivers SET truck_id = NULL WHERE truck_id = ?', [id]);
+
+    // Finally, delete the truck
+    await connection.query('DELETE FROM trucks WHERE id = ?', [id]);
+
+    await connection.commit();
     res.status(204).send(); // No content to send back
   } catch (error) {
     console.error('Database delete error:', error);
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error('Rollback error:', rollbackError);
+      }
+    }
     res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
