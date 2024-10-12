@@ -1,8 +1,9 @@
 import express from 'express';
 import db from '../db';
 // import { wss } from '../server';
-import { wss } from '../server';
-import WebSocket from 'ws';
+// import { wss } from '../server';
+// import WebSocket from 'ws';
+import { sendUpdateMessage } from '../websocket';
 // import { broadcastUpdate } from '../websocket';
 
 const router = express.Router();
@@ -15,18 +16,18 @@ interface UpdateParams {
   value: any;
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function broadcastUpdate(data: any) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          type: 'update',
-          data,
-        }),
-      );
-    }
-  });
-}
+// function broadcastUpdate(data: any) {
+//   wss.clients.forEach((client) => {
+//     if (client.readyState === WebSocket.OPEN) {
+//       client.send(
+//         JSON.stringify({
+//           type: 'update',
+//           data,
+//         }),
+//       );
+//     }
+//   });
+// }
 
 async function updateTable({ table, id, field, value }: UpdateParams): Promise<void> {
   let query: string;
@@ -107,8 +108,8 @@ router.put('/', async (req: express.Request, res: express.Response) => {
   try {
     await updateTable({ table, id, field, value });
     // Broadcast the update to all connected clients
-    broadcastUpdate({ table, id, field, value });
-
+    // broadcastUpdate({ table, id, field, value });
+    sendUpdateMessage(table, id, field, value);
     res.json({ message: 'Update successful' });
   } catch (error) {
     console.error('Error updating data:', error);

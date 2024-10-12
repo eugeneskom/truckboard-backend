@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import db from '../db';
 import { SearchItem } from '../models/searchItem';
 import { OkPacket, RowDataPacket } from 'mysql2';
+import { sendAddMessage, sendDeleteMessage } from '../websocket';
 
 const router = express.Router();
 
@@ -74,6 +75,8 @@ router.post('/', async (req: Request, res: Response) => {
       WHERE s.id = ?
     `, [insertedId]);
 
+
+    sendAddMessage('searches', searchData[0]);
     res.status(201).json(searchData[0]);
   } catch (error) {
     await connection.rollback();
@@ -83,6 +86,7 @@ router.post('/', async (req: Request, res: Response) => {
     connection.release();
   }
 });
+
 // Delete a search item and its associated rate
 router.delete('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -98,6 +102,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
     await connection.query('DELETE FROM searches WHERE id = ?', [id]);
 
     await connection.commit();
+
+    sendDeleteMessage('searches', parseInt(id));
     res.status(204).send();
   } catch (error) {
     await connection.rollback();

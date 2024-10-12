@@ -1,27 +1,41 @@
-// In your websocket.ts file on the backend
-
 import WebSocket from 'ws';
+import { wss } from './server';
 
-export function setupWebSocketServer(wss: WebSocket.Server) {
-  wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
+export interface WebSocketMessage {
+  type: 'update' | 'add' | 'delete';
+  table: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+}
 
-    ws.on('message', (message) => {
-      console.log('Received:', message.toString());
-      
-      // Echo the message back to all clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'echo',
-            message: message.toString()
-          }));
-        }
-      });
-    });
+export function broadcastMessage(message: WebSocketMessage): void {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sendUpdateMessage(table: string, id: number, field: string, value: any): void {
+  broadcastMessage({
+    type: 'update',
+    table,
+    data: { id, field, value },
+  });
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sendAddMessage(table: string, data: any): void {
+  broadcastMessage({
+    type: 'add',
+    table,
+    data,
+  });
+}
 
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
-    });
+export function sendDeleteMessage(table: string, id: number): void {
+  broadcastMessage({
+    type: 'delete',
+    table,
+    data: { id },
   });
 }
