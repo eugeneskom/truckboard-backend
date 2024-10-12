@@ -2,7 +2,6 @@
 import express, { Request, Response } from 'express';
 import db from '../db';
 import { Truck } from '../models/truck';
-import { PoolConnection } from 'mysql2';
 
 const router = express.Router();
 
