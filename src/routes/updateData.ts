@@ -55,8 +55,16 @@ async function updateTable({ table, id, field, value }: UpdateParams): Promise<v
       break;
     case 'drivers':
       // Map drivers data to normalized field names
-      const driverField = field === 'driver_lastname' ? 'lastname' : 
-      field === 'driver_name' ? 'name' : field === "driver_email" ? "email" : field === "driver_phone" ? "phone" : field;
+      const driverField =
+        field === 'driver_lastname'
+          ? 'lastname'
+          : field === 'driver_name'
+            ? 'name'
+            : field === 'driver_email'
+              ? 'email'
+              : field === 'driver_phone'
+                ? 'phone'
+                : field;
 
       query = `
     UPDATE drivers d
