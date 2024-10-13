@@ -50,19 +50,18 @@ router.post('/login', async (req: any, res: any) => {
       expiresIn: '1h'
     });
 
-    // Set HttpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure in production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600000 // 1 hour
+      maxAge: 3600000 * 56 // 56 hours
     });
 
-    // Send user information (excluding sensitive data like password)
     const userInfo = {
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      role: user.role
     };
 
     res.json({ success: true, user: userInfo });
@@ -74,7 +73,7 @@ router.post('/login', async (req: any, res: any) => {
 
 
 // eslint-disable-next-line
-router.get('/check-auth', (req: any, res: any) => {
+router.get('/check-auth', async (req: any, res: any) => {
   const token = req.cookies.token;
 
   if (!token) {
@@ -83,12 +82,38 @@ router.get('/check-auth', (req: any, res: any) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number };
-    // Here you would typically fetch the user from the database
-    // For this example, we'll just send back the userId
-    res.json({ authenticated: true, user: { id: decoded.userId } });
-  } catch {
+    
+    // Fetch user information from the database
+    const [rows] = await db.execute<RowDataPacket[]>(
+      'SELECT id, username, email, role FROM users WHERE id = ?',
+      [decoded.userId]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ authenticated: false });
+    }
+
+    const user = rows[0];
+
+    res.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Auth check error:', error);
     res.json({ authenticated: false });
   }
+});
+
+//  logout route
+router.post('/logout', (req: Request, res: Response) => {
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 
