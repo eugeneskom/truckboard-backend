@@ -5,7 +5,7 @@ import truckListRouter from './routes/truckList';
 import driverListRouter from './routes/driverList';
 import searchListRouter from './routes/searchList';
 import rateListRouter from './routes/rateList'
-import agentListRouter from './routes/agentList';
+import usersRoute from './routes/usersList';
 import addRoutes from './routes/addEntities'
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
@@ -44,7 +44,7 @@ app.get('/', (req: Request, res: Response) => {
 
 
 
-app.use('/api/agent', agentListRouter);
+app.use('/api/users', usersRoute);
 
 app.use('/api/trucks', truckListRouter);
 

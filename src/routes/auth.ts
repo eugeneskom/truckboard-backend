@@ -3,10 +3,11 @@ import jwt from 'jsonwebtoken';
 import express from 'express';
 import db from '../db';
 import { RowDataPacket } from 'mysql2';
+import { Request, Response } from 'express';
 const router = express.Router();
 
 // User registration
-router.post('/register', async (req:any, res:any) => {
+router.post('/register', async (req:Request, res:Response) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -17,13 +18,14 @@ router.post('/register', async (req:any, res:any) => {
     );
 
     res.status(201).json({ message: 'User registered successfully' + result });
+    // eslint-disable-next-line
   } catch (error:any) {
     res.status(500).json({ message: 'Error registering user', error: error.message });
   }
 });
 
 // User login
-
+// eslint-disable-next-line
 router.post('/login', async (req: any, res: any) => {
   try {
     const { email, password } = req.body;
@@ -71,7 +73,7 @@ router.post('/login', async (req: any, res: any) => {
 });
 
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
+// eslint-disable-next-line
 router.get('/check-auth', (req: any, res: any) => {
   const token = req.cookies.token;
 
