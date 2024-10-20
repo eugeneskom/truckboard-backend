@@ -1,15 +1,11 @@
-// src/server.ts
-
 import http from 'http';
 import WebSocket from 'ws';
 import app from './app';
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
-const WS_PORT = process.env.WS_PORT || 3002;
 
-// Create a separate WebSocket server
-const wss = new WebSocket.Server({ port: Number(WS_PORT) });
+const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   console.log('New WebSocket connection');
@@ -24,8 +20,7 @@ wss.on('connection', (ws) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`HTTP Server is running on port ${PORT}`);
-  console.log(`WebSocket Server is running on port ${WS_PORT}`);
+  console.log(`HTTP and WebSocket Server is running on port ${PORT}`);
 });
 
 export { wss };
