@@ -46,15 +46,17 @@ router.post('/login', async (req: any, res: any) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, {
-      expiresIn: '1h'
-    });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string
+    //   , {
+    //   expiresIn: '24h'
+    // }
+  );
 
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600000 * 56 // 56 hours
+      maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // 10 years in milliseconds
     });
 
     const userInfo = {
