@@ -1,10 +1,23 @@
 import express, { Request, Response } from 'express';
 import db from '../db';
+import { RowDataPacket } from 'mysql2';
 
 const router = express.Router();
+interface CountResult extends RowDataPacket {
+  total: number;
+}
 
 router.get('/', async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const offset = (page - 1) * limit;
+
   try {
+    const [countResult] = await db.query<CountResult[]>(
+      'SELECT COUNT(*) as total FROM searches'
+    );
+    const totalRows = countResult[0].total;
+
     const [rows] = await db.query(`
       SELECT 
           s.id AS search_id,
@@ -66,10 +79,22 @@ router.get('/', async (req: Request, res: Response) => {
       LEFT JOIN users u ON c.user_id = u.id
       ORDER BY 
           s.id
-    `);
+          LIMIT ? OFFSET ?
+    `, [limit, offset]);
     
-    
-    res.json(rows);
+
+    interface QueryRow extends RowDataPacket {
+      length: number;
+    }    
+    res.json({
+      data: rows,
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(totalRows / limit),
+        totalRows,
+        hasMore: offset + (rows as QueryRow).length < totalRows
+      }
+    });
   } catch (error) {
     console.error('Error fetching aggregated data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
