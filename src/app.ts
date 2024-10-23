@@ -24,7 +24,7 @@ const app: Application = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow only this origin in development
+  origin: ['http://localhost:3000', 'https://truckboard.remberglogistics.com/'], // Allow only this origin in development
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   credentials: true, // Enables cookies and authorization headers
