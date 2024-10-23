@@ -13,6 +13,7 @@ import AuthRouter from './routes/auth';
 import AggregatedRoute from './routes/aggregatedData';
 import updateRoute from './routes/updateData';
 import cityZipSearchRoute from './routes/cityZipSearch';
+import truckTypesRoute from './routes/truckTypes'
 
 
 dotenv.config();
@@ -64,7 +65,9 @@ app.use('/api/auth', AuthRouter);
 app.use('/api/aggregated', AggregatedRoute);
 
 app.use('/api/update-data', updateRoute);
+
 app.use('/api', cityZipSearchRoute);
+app.use('/api/truck-types', truckTypesRoute);
 
 
 export default app;
